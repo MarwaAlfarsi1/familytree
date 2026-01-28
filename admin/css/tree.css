@@ -1,0 +1,98 @@
+body {
+    background:#f5efe6;
+    font-family:'Cairo',sans-serif;
+}
+
+.tree {
+    width:100%;
+    overflow:auto;
+    padding:40px 20px;
+    text-align:center;
+}
+
+.tree ul {
+    padding-top:20px;
+    position:relative;
+    transition:all .3s;
+}
+
+.tree li {
+    float:right;
+    text-align:center;
+    list-style-type:none;
+    position:relative;
+    padding:20px 10px 0 10px;
+}
+
+/* الخطوط */
+.tree li::before,
+.tree li::after {
+    content:'';
+    position:absolute;
+    top:0;
+    right:50%;
+    border-top:2px solid #c4a77d;
+    width:50%;
+    height:20px;
+}
+
+.tree li::after {
+    right:auto;
+    left:50%;
+    border-left:2px solid #c4a77d;
+}
+
+.tree li:only-child::after,
+.tree li:only-child::before {
+    display:none;
+}
+
+.tree li:only-child {
+    padding-top:0;
+}
+
+.tree li:first-child::before {
+    border:none;
+}
+
+.tree li:last-child::after {
+    border:none;
+}
+
+.tree ul ul::before {
+    content:'';
+    position:absolute;
+    top:0;
+    right:50%;
+    border-left:2px solid #c4a77d;
+    width:0;
+    height:20px;
+}
+
+/* البطاقة */
+.card {
+    display:inline-block;
+    background:#fff;
+    border-radius:14px;
+    padding:14px 18px;
+    min-width:180px;
+    box-shadow:0 8px 18px rgba(0,0,0,.12);
+    position:relative;
+}
+
+.card .name {
+    font-weight:800;
+    font-size:16px;
+    margin-bottom:6px;
+}
+
+.card .meta {
+    font-size:13px;
+    color:#6b4f2c;
+}
+
+.card .spouse {
+    margin-top:6px;
+    font-size:13px;
+    color:#333;
+}
