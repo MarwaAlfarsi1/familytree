@@ -11,71 +11,19 @@ if (!isset($_SESSION['admin_id'])) {
     die("يجب تسجيل الدخول كإدمن أولاً");
 }
 
-// تحميل قاعدة البيانات
-$pdo = null;
-
-// محاولة تحميل db.php
-$dbPath = __DIR__ . "/../db.php";
+// تحميل ملف قاعدة البيانات المركزي
+$dbPath = __DIR__ . "/../config/db.php";
 if (!file_exists($dbPath)) {
-    $dbPath = dirname(__DIR__) . "/db.php";
+    $dbPath = dirname(__DIR__) . "/config/db.php";
 }
-
-if (file_exists($dbPath)) {
-    require_once $dbPath;
-    // التحقق من أن $pdo تم تعريفه بعد التحميل
-    if (!isset($pdo) || !$pdo) {
-        $pdo = null; // إعادة التعيين لضمان أننا سنحاول الاتصال المباشر
-    }
+if (!file_exists($dbPath)) {
+    die("خطأ: ملف قاعدة البيانات غير موجود. يرجى التأكد من وجود config/db.php");
 }
+require_once $dbPath;
 
-// إذا لم يتم تعريف $pdo، قم بالاتصال المباشر
+// التحقق من وجود $pdo بعد التحميل
 if (!isset($pdo) || !$pdo) {
-    try {
-        // قراءة ملف .env أولاً إن وجد
-        $envFile = __DIR__ . "/../.env";
-        $env = [];
-        
-        if (file_exists($envFile)) {
-            $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if (empty($line) || strpos($line, '#') === 0) {
-                    continue;
-                }
-                if (strpos($line, '=') !== false) {
-                    list($key, $value) = explode('=', $line, 2);
-                    $key = trim($key);
-                    $value = trim($value);
-                    if ((substr($value, 0, 1) === '"' && substr($value, -1) === '"') ||
-                        (substr($value, 0, 1) === "'" && substr($value, -1) === "'")) {
-                        $value = substr($value, 1, -1);
-                    }
-                    $env[$key] = $value;
-                }
-            }
-        }
-        
-        $host = $env['DB_HOST'] ?? 'localhost';
-        $dbname = $env['DB_NAME'] ?? 'u480768868_family_tree';
-        $username = $env['DB_USER'] ?? 'u480768868_Mmm111999';
-        $password = $env['DB_PASS'] ?? 'Mmmm@@999';
-        $charset = $env['DB_CHARSET'] ?? 'utf8mb4';
-        
-        $pdo = new PDO(
-            "mysql:host=$host;dbname=$dbname;charset=$charset",
-            $username,
-            $password,
-            [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES $charset COLLATE {$charset}_unicode_ci"
-            ]
-        );
-    } catch (PDOException $e) {
-        die("خطأ في الاتصال بقاعدة البيانات: " . htmlspecialchars($e->getMessage()));
-    } catch (Exception $e) {
-        die("خطأ عام: " . htmlspecialchars($e->getMessage()));
-    }
+    die("خطأ: فشل الاتصال بقاعدة البيانات");
 }
 
 // التحقق النهائي من وجود $pdo

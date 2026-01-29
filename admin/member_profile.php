@@ -18,54 +18,19 @@ if (!$isAdmin && !$isMember) {
     exit();
 }
 
-// تحديد مسار ملفات config
-$dbPath = __DIR__ . "/../db.php";
+// تحميل ملف قاعدة البيانات المركزي
+$dbPath = __DIR__ . "/../config/db.php";
 if (!file_exists($dbPath)) {
-    $dbPath = dirname(__DIR__) . "/db.php";
+    $dbPath = dirname(__DIR__) . "/config/db.php";
 }
-if (file_exists($dbPath)) {
-    require_once $dbPath;
-} else {
-    // محاولة الاتصال المباشر
-    try {
-        $host = "localhost";
-        $dbname = "u480768868_family_tree";
-        $username = "u480768868_Mmm111999";
-        $password = "Mmmm@@999";
-        
-        $pdo = new PDO(
-            "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
-            $username,
-            $password,
-            [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
-            ]
-        );
-    } catch (PDOException $e) {
-        die("خطأ في الاتصال بقاعدة البيانات: " . htmlspecialchars($e->getMessage()));
-    }
+if (!file_exists($dbPath)) {
+    die("خطأ: ملف قاعدة البيانات غير موجود. يرجى التأكد من وجود config/db.php");
 }
+require_once $dbPath;
 
 // التحقق من وجود $pdo بعد التحميل
 if (!isset($pdo) || !$pdo) {
-    try {
-        $host = "localhost";
-        $dbname = "u480768868_family_tree";
-        $username = "u480768868_Mmm111999";
-        $password = "Mmmm@@999";
-        
-        $pdo = new PDO(
-            "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
-            $username,
-            $password,
-            [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
-            ]
-        );
+    die("خطأ: فشل الاتصال بقاعدة البيانات");
     } catch (PDOException $e) {
         die("خطأ في الاتصال بقاعدة البيانات: " . htmlspecialchars($e->getMessage()));
     }

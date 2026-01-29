@@ -11,45 +11,19 @@ if (!isset($_SESSION['admin_id'])) {
     exit(); 
 }
 
-// تحديد مسار ملفات config - محاولة عدة مسارات
-$dbPath = null;
-$possiblePaths = [
-    __DIR__ . "/../db.php",
-    dirname(__DIR__) . "/db.php",
-    $_SERVER['DOCUMENT_ROOT'] . "/familytree/db.php",
-    dirname(dirname(__FILE__)) . "/db.php"
-];
-
-foreach ($possiblePaths as $path) {
-    if (file_exists($path)) {
-        $dbPath = $path;
-        break;
-    }
+// تحميل ملف قاعدة البيانات المركزي
+$dbPath = __DIR__ . "/../config/db.php";
+if (!file_exists($dbPath)) {
+    $dbPath = dirname(__DIR__) . "/config/db.php";
 }
+if (!file_exists($dbPath)) {
+    die("خطأ: ملف قاعدة البيانات غير موجود. يرجى التأكد من وجود config/db.php");
+}
+require_once $dbPath;
 
-if ($dbPath && file_exists($dbPath)) {
-    require_once $dbPath;
-} else {
-    // محاولة الاتصال المباشر
-    try {
-        $host = "localhost";
-        $dbname = "u480768868_family_tree";
-        $username = "u480768868_Mmm111999";
-        $password = "Mmmm@@999";
-        
-        $pdo = new PDO(
-            "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
-            $username,
-            $password,
-            [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
-            ]
-        );
-    } catch (PDOException $e) {
-        die("خطأ في الاتصال بقاعدة البيانات: " . htmlspecialchars($e->getMessage()));
-    }
+// التحقق من وجود $pdo بعد التحميل
+if (!isset($pdo) || !$pdo) {
+    die("خطأ: فشل الاتصال بقاعدة البيانات");
 }
 
 if (!isset($pdo) || !$pdo) {

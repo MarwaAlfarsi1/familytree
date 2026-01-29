@@ -5,144 +5,31 @@ ini_set('log_errors', 1);
 
 session_start();
 
-// تحميل ملفات النظام - استخدام طرق متعددة للعثور على الملف
+// تحميل ملف قاعدة البيانات المركزي
 try {
-    // طريقة 1: استخدام $_SERVER['DOCUMENT_ROOT']
-    $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
-    $dbPath1 = $docRoot . '/familytree/db.php';
-    
-    // طريقة 2: استخدام dirname مع __DIR__
-    $rootDir = dirname(dirname(__DIR__));
-    $dbPath2 = $rootDir . '/db.php';
-    
-    // طريقة 3: استخدام $_SERVER['SCRIPT_FILENAME']
-    $scriptDir = dirname(dirname(dirname($_SERVER['SCRIPT_FILENAME'] ?? '')));
-    $dbPath3 = $scriptDir . '/db.php';
-    
-    // محاولة العثور على الملف
-    $dbPath = null;
-    if (file_exists($dbPath1)) {
-        $dbPath = $dbPath1;
-    } elseif (file_exists($dbPath2)) {
-        $dbPath = $dbPath2;
-    } elseif (file_exists($dbPath3)) {
-        $dbPath = $dbPath3;
-    } else {
-        // محاولة البحث في المجلد الحالي والمجلدات الأب
-        $currentDir = __DIR__;
-        for ($i = 0; $i < 5; $i++) {
-            $testPath = $currentDir . str_repeat('/..', $i) . '/db.php';
-            $realPath = realpath($testPath);
-            if ($realPath && file_exists($realPath)) {
-                $dbPath = $realPath;
-                break;
-            }
-        }
+    $dbPath = __DIR__ . '/../../config/db.php';
+    if (!file_exists($dbPath)) {
+        $dbPath = dirname(dirname(__DIR__)) . '/config/db.php';
     }
+    if (!file_exists($dbPath)) {
+        die("خطأ: ملف قاعدة البيانات غير موجود. يرجى التأكد من وجود config/db.php");
+    }
+    require_once $dbPath;
     
-    if (!$dbPath || !file_exists($dbPath)) {
-        // إذا لم نجد الملف، نحاول الاتصال مباشرة بقاعدة البيانات
-        // قراءة ملف .env أولاً إن وجد
-        $envFile = null;
-        $envPaths = [
-            $docRoot . '/familytree/.env',
-            $rootDir . '/.env',
-            dirname(__DIR__) . '/../.env',
-            dirname(dirname(__DIR__)) . '/.env'
-        ];
-        
-        foreach ($envPaths as $envPath) {
-            if (file_exists($envPath)) {
-                $envFile = $envPath;
-                break;
-            }
-        }
-        
-        $env = [];
-        if ($envFile) {
-            $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if (empty($line) || strpos($line, '#') === 0) {
-                    continue;
-                }
-                if (strpos($line, '=') !== false) {
-                    list($key, $value) = explode('=', $line, 2);
-                    $key = trim($key);
-                    $value = trim($value);
-                    if ((substr($value, 0, 1) === '"' && substr($value, -1) === '"') ||
-                        (substr($value, 0, 1) === "'" && substr($value, -1) === "'")) {
-                        $value = substr($value, 1, -1);
-                    }
-                    $env[$key] = $value;
-                }
-            }
-        }
-        
-        // استخدام القيم من .env أو القيم الافتراضية
-        $host = $env['DB_HOST'] ?? 'localhost';
-        $dbname = $env['DB_NAME'] ?? 'u480768868_family_tree';
-        $username = $env['DB_USER'] ?? 'u480768868_Mmm111999';
-        $password = $env['DB_PASS'] ?? 'Mmmm@@999';
-        $charset = $env['DB_CHARSET'] ?? 'utf8mb4';
-        
-        try {
-            $pdo = new PDO(
-                "mysql:host=$host;dbname=$dbname;charset=$charset",
-                $username,
-                $password,
-                [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES $charset COLLATE {$charset}_unicode_ci"
-                ]
-            );
-        } catch (PDOException $e) {
-            die("خطأ في الاتصال بقاعدة البيانات: " . htmlspecialchars($e->getMessage()));
-        }
-    } else {
-        require_once $dbPath;
-        // التأكد من أن $pdo معرف بعد تحميل db.php
-        if (!isset($pdo) || !$pdo) {
-            // محاولة الاتصال مباشرة
-            $host = 'localhost';
-            $dbname = 'u480768868_family_tree';
-            $username = 'u480768868_Mmm111999';
-            $password = 'Mmmm@@999';
-            $charset = 'utf8mb4';
-            
-            try {
-                $pdo = new PDO(
-                    "mysql:host=$host;dbname=$dbname;charset=$charset",
-                    $username,
-                    $password,
-                    [
-                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES $charset COLLATE {$charset}_unicode_ci"
-                    ]
-                );
-            } catch (PDOException $e) {
-                die("خطأ في الاتصال بقاعدة البيانات");
-            }
-        }
+    // التحقق من وجود $pdo بعد التحميل
+    if (!isset($pdo) || !$pdo) {
+        die("خطأ: فشل الاتصال بقاعدة البيانات");
     }
     
     // تحميل ملف functions.php
-    $functionsPath = null;
-    if ($dbPath) {
-        $functionsPath = dirname($dbPath) . '/functions.php';
-    } else {
-        $functionsPath1 = $docRoot . '/familytree/functions.php';
-        $functionsPath2 = $rootDir . '/functions.php';
-        $functionsPath3 = $scriptDir . '/functions.php';
-        
-        if (file_exists($functionsPath1)) {
-            $functionsPath = $functionsPath1;
-        } elseif (file_exists($functionsPath2)) {
-            $functionsPath = $functionsPath2;
-        } elseif (file_exists($functionsPath3)) {
-            $functionsPath = $functionsPath3;
+    $functionsPath = __DIR__ . '/../../config/functions.php';
+    if (!file_exists($functionsPath)) {
+        $functionsPath = dirname(dirname(__DIR__)) . '/config/functions.php';
+    }
+    if (!file_exists($functionsPath)) {
+        $functionsPath = __DIR__ . '/../../functions.php';
+        if (!file_exists($functionsPath)) {
+            $functionsPath = dirname(dirname(__DIR__)) . '/functions.php';
         }
     }
     
